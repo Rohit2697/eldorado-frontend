@@ -1,0 +1,13 @@
+body {
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  column-gap: 9px;
+}
+
+select,input,textarea {
+  width: fit-content !important;
+}
