@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import api from '../utils/api';
 import FormData from 'form-data';
 import imageName from '../utils/imageName';
-export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, setRows }) {
+import AccountSecret from './AccountSecret';
+export default function SellerTableRow({ rowSL, disableReduceRowBtn,reduceRow, row, rows, games, setRows }) {
   const [gameSelected, setGameSelected] = useState(false)
   const [gameInfo, setGameinfo] = useState({})
+  const [quantity, setQuantity] = useState(1)
   const [disableFields, setDisableFileds] = useState({
     tradeEnvironmentId: true,
     attributeIdsCsv: true,
@@ -91,6 +93,7 @@ export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, set
 
   }, [gameSelected])
   const handleInputChange = (event) => {
+    console.log(event.target.name)
     if (event.target.name === 'itemId') {
       setGameSelected(true)
     }
@@ -100,9 +103,31 @@ export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, set
         return setSelectedImage(file);
       }
     }
+
     const newRows = rows.map((row, i) => {
+
       if (i === rowSL - 1) {
-        return { ...row, [event.target.name]: event.target.value };
+        if (event.target.name === 'quantity') {
+          if (quantity === event.target.value) {
+            return setQuantity(event.target.value)
+          }
+          console.log(quantity > event.target.value)
+          if (quantity > event.target.value) {
+         
+            for (let i = 0; i < quantity - event.target.value; i++) {
+              row.accountSecretDetails.pop()
+            }
+          }
+          else if (quantity < event.target.value) {
+            for (let i = 0; i < event.target.value - quantity; i++) {
+              row.accountSecretDetails.push("")
+            }
+          }
+
+          setQuantity(event.target.value)
+
+          return row
+        } else return { ...row, [event.target.name]: event.target.value };
       }
       return row;
     });
@@ -114,7 +139,7 @@ export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, set
   }
   return (
     <tr>
-      <button className='btn btn-danger' type="button" onClick={handleReduceClick}>-</button>
+      <button disabled={disableReduceRowBtn} className='btn btn-danger' type="button" onClick={handleReduceClick}>-</button>
       <th scope="row" className="table-light">{rowSL}</th>
       <td className="table-light">
         <select
@@ -168,7 +193,7 @@ export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, set
         </select>
       </td>
       <td className="table-light">
-        <input className='form-control' min="1" type='number' value={row.quantity} name='quantity' onChange={handleInputChange} />
+        <input className='form-control' min="1" type='number' value={quantity} name='quantity' onChange={handleInputChange} />
       </td>
       <td className="table-light">
         <input className='form-control' required type='text' value={row.amount} placeholder='amount in USD' name='amount' onChange={handleInputChange} />
@@ -201,7 +226,9 @@ export default function SellerTableRow({ rowSL, reduceRow, row, rows, games, set
         <textarea className='form-control' required value={row.description} placeholder='Game Description' name='description' onChange={handleInputChange} />
       </td>
       <td className="table-light">
-        <textarea className='form-control' required value={row.accountSecretDetails} placeholder='Account Secret' name='accountSecretDetails' onChange={handleInputChange} />
+        {row.accountSecretDetails.map((accountDetail, index) => {
+          return <AccountSecret accountDetail={accountDetail} key={index} rowSL={rowSL} secretNumber={index} rows={rows} setRows={setRows} />
+        })}
       </td>
     </tr>
   );

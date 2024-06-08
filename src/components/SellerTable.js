@@ -12,11 +12,11 @@ export default function SellerTable() {
     itemId: '', quantity: 1,
     amount: '', description: '',
     offerTitle: '', attributeIdsCsv: '',
-    accountSecretDetails: ''
+    accountSecretDetails: [""]
   }
   const [games, setGames] = useState([])
   const [tableLoading, setTableLoading] = useState(true);
-
+  const [disableReduceRowBtn, SetDisableRowBtn] = useState(true)
 
   const [rows, setRows] = useState([rowData]);
 
@@ -40,31 +40,59 @@ export default function SellerTable() {
     console.log(rows)
     api.post('/sellOrders', rows).then((res) => {
       alert("data has been stored")
-      setRows([rowData])
+      // eslint-disable-next-line no-restricted-globals
+      location.reload()
     }).catch(err => {
       alert("Unable to load data")
     })
   };
+
+  useEffect(() => {
+    if (rows.length === 1) {
+      SetDisableRowBtn(true)
+    }
+    else if (rows.length > 1) {
+      SetDisableRowBtn(false)
+    }
+  }, [rows.length])
   const addRow = () => {
+
     setRows([...rows, rowData]);
+    SetDisableRowBtn(false)
   };
   const reduceRow = (rowNumber) => {
     // let newRows = rows
 
-    console.log(rowNumber)
+    if (rows.length === 1) return
+    let newRows = rows.slice(0, rowNumber).concat(rows.slice(rowNumber + 1));
+
+    setRows([...newRows])
 
     // newRows.pop()
     // console.log(newRows)
 
     // setRows([...newRows])
   }
-  if (tableLoading) {
-    return <div>Loading...</div>;
-  }
+
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      {tableLoading && <div style={{
+        "height": "100%",
+        width: "100%"
+      }}>
+        <div className="spinner-border text-danger" style={{
+          marginTop: "15%",
+          zIndex: "1",
+          position: "absolute"
+        }} role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>}
+
+      <form style={{
+        opacity: tableLoading ? "0.5" : 1
+      }} onSubmit={handleSubmit}>
         <table className="table table-hover">
 
           <thead>
@@ -88,7 +116,7 @@ export default function SellerTable() {
               return (
 
 
-                < SellerTableRow reduceRow={reduceRow} rowSL={index + 1} row={row} rows={rows} key={index} games={games} setRows={setRows} />
+                < SellerTableRow disableReduceRowBtn={disableReduceRowBtn} reduceRow={reduceRow} rowSL={index + 1} row={row} rows={rows} key={index} games={games} setRows={setRows} />
 
               )
             })}
